@@ -1,0 +1,18 @@
+
+
+The model is specified by three parameters, $\theta = [n, G_o, f]$ where $n$ is the H density, $G_o$ is the radiation field strength, and $f$ is the geometrical filling factor of the gas at density $n$.  These parameters determine the observed quantities through the following relationships
+\begin{eqnarray}
+L_{FIR} & = & K G_o \, f \\
+G_* & = &\sqrt{2}\,G_o \\
+L_j & = & I_i(n, G_o) \frac { 10^{-3}}{2\pi}
+\end{eqnarray}
+where $K= 1.6\times10^{-6}/(2\pi)$ in some units and $I_j(n, Go)$ is the intensity of line $j$ and is obtained from the models of \citep{kauffman01}.  LRC Describe reasoning for other relationships here, and the lines used.  We construct $N$ models with the parameters $theta$ uniformly distributed between XXX and YYY.
+
+
+We then construct, for each pixel, a likelihood for each model
+\begin{eqnarray}
+\ln\mathcal{L_k} & = & \frac{L_{FIR} -L_{FIR, obs}}{\sigma^2(L_{FIR,obs})} +
+                        &    & \frac{G_*} -G_{*, obs}}{\sigma^2(G_{*,obs})} +
+                        &    & \Sum_j \frac{(L_j - L_{j,obs})^2} {\sigma^2(L_{j,obs})}
+\end{eqnarray}
+Then we do something to obtain point estimates.
