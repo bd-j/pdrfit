@@ -17,7 +17,7 @@ def fit_pixel(pixel_values, region, mask = [1,0,0], nmod = 5e4,
     obs['line_intensity'] = np.array([dat[5], dat[7], dat[9]]) #W/m^2/sr
     obs['FIR'] = dat[3]  #W/m^2/sr
     obs['Gstar'] = dat[2] #Habings
-    obs['line_unc'] = np.sqrt(np.array([dat[6], dat[8], dat[10]])**2 + (0.1 * obs['line_intensity'])**2)
+    obs['line_unc'] = np.sqrt(np.array([dat[6], dat[8], dat[10]])**2 + (np.array([0.1,0.5,0.5]) * obs['line_intensity'])**2)
     obs['FIR_unc'] = dat[4]
     obs['Gstar_unc'] = obs['Gstar'] * 0.5
 
@@ -34,11 +34,12 @@ def fit_pixel(pixel_values, region, mask = [1,0,0], nmod = 5e4,
         pdr = pdrfit.PDRModel()
     
     priors = {}
-    priors['n'] = {'min': 1, 'max':6, 'scale':'log'}
-    priors['Go'] = {'min': 0.5, 'max':4.5, 'scale':'log'}
+    priors['n'] = {'min': 1, 'max':4.5, 'scale':'log'}
+    priors['Go'] = {'min': 0.5, 'max':4, 'scale':'log'}
     fill_try = obs['FIR'] / (obs['Gstar'] * pdrfit.GtoI) #first guess at filling factor
-    priors['fill'] = {'min': fill_try/4., 'max':1.0, 'scale':'linear'}
-    
+    priors['fill'] = {'min': fill_try/3., 'max': np.min([3.*fill_try, 1.0]), 'scale':'linear'}
+    #priors['fill'] = {'min': fill_try/2., 'max': 1.0, 'scale':'linear'}
+     
     fill_try = obs['FIR'] / (obs['Gstar'] * pdrfit.GtoI)
 #use random sampling of the parameter space.  Could also set up here to use grids
     n = np.random.uniform(priors['n']['min'], priors['n']['max'], int(nmod))
@@ -85,11 +86,11 @@ if __name__ == '__main__':
     
                     #    sys.exit()
     
-    dat = np.loadtxt('../observations/HV_pixelvalues.txt', skiprows = 2)
-    region = 'Hubble V'
+    dat = np.loadtxt('/Users/carlson/Desktop/NGC6822/FitsFiles/HubbleX/Ratios/HX_pixelvalues_lown.txt', skiprows = 2)
+    region = 'Hubble X'
     npix = dat.shape[0]
     
-    outfile = open('ngc6822_point_estimates.dat','w')
+    outfile = open('HubbleXpoint_estimates_lown_lowfill_ciiweight.dat','w')
     outfile.write('x y chi_best, logn_best logG_best fill_best OI_best ' \
                   'logn_av logG_av fill_av ' \
                   'logn_lo logG_lo fill_lo ' \
@@ -97,16 +98,16 @@ if __name__ == '__main__':
                   'chibest_cell Pcell OI_cell CII_cell \n')
 
     grid = pdr = None
-    for ipix in xrange(2):
+    for ipix in xrange(npix):
         print('pixel #{0} of {1}'.format(ipix, npix))
         pixel_values = dat[ipix,:].tolist() 
         #        theta, lnp, obs, pred = fit_pixel(pixel_values, region, mask = [1,1,0], nmod = 5e4)
-        theta, lnp, obs, pred, mod = fit_pixel(pixel_values, region, nmod = 5e4, grid = grid, pdr =pdr) # LYNN
+        theta, lnp, obs, pred, mod = fit_pixel(pixel_values, region, nmod = 1e5, grid = grid, pdr =pdr) # LYNN
         lnp[lnp == 0.] = lnp.min() #HACK
         grid, pdr = mod[0], mod[1]
         
         pdrplot.triangle(theta, lnp, obs, n_per_bin = 100.)
-        pdrplot.plot_one(theta, lnp, obs, n_per_bin = 100.)
+        pdrplot.plot_one(theta, lnp, obs, n_per_bin = 100., fontsize=18)
         pdrplot.line_prediction(theta, lnp, obs, pred[0])
 
         #write the pixel number
