@@ -154,6 +154,7 @@ def point_estimates(theta, lnprob, obs, predicted_lines,
         
     #marginalized medians and other percentiles
     if point_type == 'marginalized':
+        point, upper, lower = [],[],[]
         for par in theta:
             pctles = cdf_moment(theta, lnprob, percentiles)
             lower += pctles[0]

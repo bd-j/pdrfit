@@ -95,7 +95,10 @@ if __name__ == '__main__':
                   'logn_av logG_av fill_av ' \
                   'logn_lo logG_lo fill_lo ' \
                   'logn_hi logG_hi fill_hi ' \
-                  'chibest_cell Pcell OI_cell CII_cell \n')
+                  'chibest_cell Pcell OI_cell CII_cell ' \
+                  'logn_p50 logG_p50 fill_p50 ' \
+                  'logn_p16 logG_p16 fill_p16 ' \
+                  'logn_p84 logG_p84 fill_p84 \n')
 
     grid = pdr = None
     for ipix in xrange(npix):
@@ -122,11 +125,17 @@ if __name__ == '__main__':
         #  edges of the cell in each dimension (not actual uncertainty estimates).
         #  This could be very noisy, especially if n_per_bin is low....
         point, up, lo, cell_lines, chibest_cell, pcell = pdrplot.point_estimates(theta, lnp, obs, pred[0], point_type = 'max_den', n_per_bin = 20.)
+        p50, p84, p16, marg_lines, _, _ = pdrplot.point_estimates(theta, lnp, obs, pred[0],
+                                                                  point_type = 'marginalized')
+
         outfile.write('{0:6.3f} {1:6.3f} {2:6.3f} '.format(*point))
         outfile.write('{0:6.3f} {1:6.3f} {2:6.3f} '.format(*lo))
         outfile.write('{0:6.3f} {1:6.3f} {2:6.3f} '.format(*up))
         outfile.write('{0:6.3f} {1:6.3e} '.format(chibest_cell, pcell))
         outfile.write('{0:6.3e} {1:6.3e} '.format(cell_lines[1], cell_lines[0]))
+        outfile.write('{0:6.3f} {1:6.3f} {2:6.3f} '.format(*p50))
+        outfile.write('{0:6.3f} {1:6.3f} {2:6.3f} '.format(*p16))
+        outfile.write('{0:6.3f} {1:6.3f} {2:6.3f} '.format(*p84))
         outfile.write('\n') #newline
         
     outfile.close()
