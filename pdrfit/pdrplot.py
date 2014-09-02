@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as pl
 
-def triangle(theta, lnprob, obs, n_per_bin = 100.):
+def triangle(theta, lnprob, obs, n_per_bin=100.):
     labels = ['log n', 'log Go', 'fill fraction']
     nmod = len(lnprob)
     norm = (np.exp(lnprob)).sum()
@@ -11,9 +11,9 @@ def triangle(theta, lnprob, obs, n_per_bin = 100.):
     fig, axes = pl.subplots(K, K, figsize=(dim*1.1, dim))
     for i in xrange(K):
         ax = axes[i,i]
-        hist, x = np.histogram(theta[i], weights = np.exp(lnprob)/norm, bins = int(np.sqrt(nmod/n_per_bin)))
+        hist, x = np.histogram(theta[i], weights = np.exp(lnprob)/norm,
+                               bins = int(np.sqrt(nmod/n_per_bin)))
         ax.step(x[:-1],hist, where ='post', color = 'k')
-#        ax.hist(theta[i], weights = np.exp(lnprob)/norm, bins = int(nmod/n_per_bin),color = 'k', histtype = 'step')
         ax.tick_params(axis ='y', labelleft = 'off', labelright = 'on')
         if i == 0:
             ax.set_title
@@ -30,8 +30,8 @@ def triangle(theta, lnprob, obs, n_per_bin = 100.):
                     ax.set_xticklabels([])
                 continue
             
-            hist, x, y = np.histogram2d(theta[j], theta[i], weights = np.exp(lnprob)/norm,
-                                        bins = int(np.sqrt(nmod/n_per_bin)))
+            hist, x, y = np.histogram2d(theta[j], theta[i], weights=np.exp(lnprob)/norm,
+                                        bins= int(np.sqrt(nmod/n_per_bin)))
             ax.imshow(hist.T, interpolation = 'nearest', origin = 'low',
                       extent=[x[0], x[-1], y[0], y[-1]], aspect ='auto')
             #
@@ -46,13 +46,14 @@ def triangle(theta, lnprob, obs, n_per_bin = 100.):
                 ax.set_xlabel(labels[j])
             else:
                 ax.set_xticklabels([])
-
-        pl.suptitle('{0}, pixel ({1},{2}), mask = {3}'.format(obs['region'], obs['pixel'][0],obs['pixel'][1], obs['line_mask']))
-        fig.savefig('results/triangle_{0}_x{1:02.0f}_y{2:02.0f}.pdf'.format(''.join(obs['region'].split()), obs['pixel'][0],obs['pixel'][1]))
+        vals = [obs['region'], obs['pixel'][0],obs['pixel'][1], obs['line_mask']]
+        pl.suptitle('{0}, pixel ({1},{2}), mask = {3}'.format(**vals))
+        vals = [''.join(obs['region'].split()), obs['pixel'][0],obs['pixel'][1]]
+        fig.savefig('results/triangle_{0}_x{1:02.0f}_y{2:02.0f}.pdf'.format(**vals))
         pl.close(fig)
 
 
-def plot_one(theta, lnprob, obs, n_per_bin = 100., fontsize =18, axwidth = 2):
+def plot_one(theta, lnprob, obs, n_per_bin=100., fontsize=18, axwidth=2):
     pl.rc('axes', linewidth=axwidth)
     labels = ['log n', 'log Go', 'fill fraction']
     sl = ['n','g','f']
@@ -66,29 +67,30 @@ def plot_one(theta, lnprob, obs, n_per_bin = 100., fontsize =18, axwidth = 2):
             elif j == i:
                 pl.figure()
                 pl.clf()
-                hist, x = np.histogram(theta[i], weights = np.exp(lnprob)/norm, bins = int(np.sqrt(nmod/n_per_bin)))
-                pl.step(x[:-1],hist, where ='post', color = 'k', linewidth = axwidth)
-                pl.xlabel(labels[i], fontsize = fontsize)
-                pl.savefig('results/lnphist_{0}_{1}_x{2:02.0f}_y{3:02.0f}.pdf'.format(sl[i], ''.join(obs['region'].split()),
-                                                                                     obs['pixel'][0],obs['pixel'][1]))
+                hist, x = np.histogram(theta[i], weights=np.exp(lnprob)/norm,
+                                       bins= int(np.sqrt(nmod/n_per_bin)))
+                pl.step(x[:-1],hist, where='post', color='k', linewidth=axwidth)
+                pl.xlabel(labels[i], fontsize=fontsize)
+                vals = [sl[i], ''.join(obs['region'].split()), obs['pixel'][0],obs['pixel'][1]]
+                pl.savefig('results/lnphist_{0}_{1}_x{2:02.0f}_y{3:02.0f}.pdf'.format(**vals))
                 pl.close()
             else:
                 pl.figure()
                 pl.clf()
-                hist, x, y = np.histogram2d(theta[j], theta[i], weights = np.exp(lnprob)/norm,
-                                        bins = int(np.sqrt(nmod/n_per_bin)))
-                pl.imshow(hist.T, interpolation = 'nearest', origin = 'low',
-                          extent=[x[0], x[-1], y[0], y[-1]], aspect ='auto', cmap = pl.cm.coolwarm)
+                hist, x, y = np.histogram2d(theta[j], theta[i], weights=np.exp(lnprob)/norm,
+                                        bins= int(np.sqrt(nmod/n_per_bin)))
+                pl.imshow(hist.T, interpolation='nearest', origin='low',
+                          extent=[x[0], x[-1], y[0], y[-1]], aspect='auto', cmap=pl.cm.coolwarm)
                 pl.colorbar()
-                pl.ylabel(labels[i], fontsize = fontsize)
-                pl.xlabel(labels[j], fontsize = fontsize)
-                pl.tick_params(axis = 'both', width = axwidth * 1.5, length = 5)
-                pl.savefig('results/lnp2d_{0}_vs_{1}_{4}_x{2:02.0f}_y{3:02.0f}.pdf'.format(sl[i], sl[j],
-                                                                                            obs['pixel'][0],obs['pixel'][1],
-                                                                                            ''.join(obs['region'].split())))
+                pl.ylabel(labels[i], fontsize=fontsize)
+                pl.xlabel(labels[j], fontsize=fontsize)
+                pl.tick_params(axis='both', width=axwidth * 1.5, length=5)
+                vals = [sl[i], sl[j], obs['pixel'][0], obs['pixel'][1],
+                        ''.join(obs['region'].split())]
+                pl.savefig('results/lnp2d_{0}_vs_{1}_{4}_x{2:02.0f}_y{3:02.0f}.pdf'.format(**vals))
                 pl.close()
                 
-def line_prediction(theta, lnprob, obs, predicted_lines, line_index = 1):
+def line_prediction(theta, lnprob, obs, predicted_lines, line_index=1):
     line_name = ['CII158', 'OI63', 'OI145']
     if obs['line_intensity'][line_index] == 0 :
         return
@@ -97,24 +99,30 @@ def line_prediction(theta, lnprob, obs, predicted_lines, line_index = 1):
     b = (pp > lnprob.max()-10)  # these are the reasonable fits
     pl.figure()
     pl.clf()
-    pl.scatter(theta[0][b], predicted_lines[b,line_index]/obs['line_intensity'][line_index],c = lnprob[b], linewidths = 0)
+    pl.scatter(theta[0][b], predicted_lines[b,line_index]/obs['line_intensity'][line_index],
+               c=lnprob[b], linewidths=0)
     pl.xlabel('log n')
     pl.ylabel('{0} model/obs'.format(line_name[line_index]))
     pl.yscale('log')
     pl.ylim(0.5,100)
     #pl.colorbar()
-    pl.title('{0}, pixel ({1},{2}), mask = {3}'.format(obs['region'], obs['pixel'][0],obs['pixel'][1], obs['line_mask']))
-    pl.savefig('results/linepred{3}_{0}_x{1:02.0f}_y{2:02.0f}.pdf'.format(''.join(obs['region'].split()), obs['pixel'][0],obs['pixel'][1], line_name[line_index]))
+    vals = [obs['region'], obs['pixel'][0],obs['pixel'][1], obs['line_mask']]
+    pl.title('{0}, pixel ({1},{2}), mask = {3}'.format(**vals))
+    vals = [''.join(obs['region'].split()), obs['pixel'][0], obs['pixel'][1],
+            line_name[line_index]]
+    pl.savefig('results/linepred{3}_{0}_x{1:02.0f}_y{2:02.0f}.pdf'.format(**vals))
     pl.close()
 
 
 def point_estimates(theta, lnprob, obs, predicted_lines,
-                    point_type = 'best_fit', n_per_bin = 30):
+                    point_type='best_fit', n_per_bin=30,
+                    percentiles=[0.16, 0.5, 0.84]):
 
     nmod = len(lnprob)
     ntheta = len(theta)
     nlines = predicted_lines.shape[1]
-
+    chi_best = -2.0 * lnprob.max()
+    
     #best fit
     if point_type == 'best_fit':
         ind_best = np.argmax(lnprob)
@@ -122,7 +130,6 @@ def point_estimates(theta, lnprob, obs, predicted_lines,
         lower = ntheta * [0.]
         upper = ntheta * [0.]
         lines = [predicted_lines[ind_best, i] for i in range(nlines)]
-        chi_best = -2.0 * lnprob.max()
         pcell = None
         
     #cell with maximum probability density
@@ -147,7 +154,24 @@ def point_estimates(theta, lnprob, obs, predicted_lines,
         
     #marginalized medians and other percentiles
     if point_type == 'marginalized':
-        print('not implemented')
+        for par in theta:
+            pctles = cdf_moment(theta, lnprob, percentiles)
+            lower += pctles[0]
+            upper += pctles[2]
+            point += pctles[1]
+
+        lines = [cdf_moment(predicted_lines[:,i], lnprob, percentiles)[1]
+                 for i in range(nlines)]
+        pcell = None
 
     return point, upper, lower, lines, chi_best, pcell
     
+def cdf_moment(inpar, inlnprob, percentiles):
+    good = np.isfinite(inpar) & np.isfinite(inlnprob)
+    par, lnprob = inpar[good], inlnprob[good]
+    order = np.argsort(par)
+    cdf = np.cumsum(np.exp(lnprob[order])) / np.sum(np.exp(lnprob))
+    ind_ptiles= np.searchsorted(cdf, percentiles)
+    ind_max=np.argmax(lnprob_isnum)
+
+    return np.concatenate(par[order[ind_ptiles]],par[ind_max])
