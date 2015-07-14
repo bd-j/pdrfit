@@ -2,7 +2,7 @@
 # FIR = 1.6e-3*Go/(2*!pi)  relates Go in the file to FIR in units of erg s-1 cm-2 sr-1
 # G(FIR)=FIR*2*!pi/(1.6e-6)     ; Go calculated from FIR - with FIR in W m-2 sr-1  and Go in Habings
 # Go(stellar) map in Habings.  1 Habing=1.6x10-3 erg s-1 cm-2 =1.6x10-6 W m-2
-#    When comparing to model Go, divide by SQRT(2) for a nod to line of sight geometry 
+#    When comparing to model Go, divide by SQRT(2) for a nod to line of sight geometry
 # MODELS -
 # OI file has columns
 # index(n value), log(n), index(g value), log(Go), [OI]63um, [OI]145um
@@ -97,11 +97,12 @@ class PDRModel(object):
         lnprob += -0.5 * ((Gstar - obs['Gstar'])**2 / obs['Gstar_unc']**2)
         return lnprob, [lines, FIR, Gstar]
 
+    def blob_params_names(self):
+        return [['[CII]','[OI]63um', '[OI]145um'], 'FIR', 'Gstar'] 
 
 class PDRGrid(modelgrid.ModelLibrary):
-    """
-    Subclass the ModelLibrary to store and procduce line intensities
-    from the precomputed Kauffman 2001 models.
+    """Subclass the ModelLibrary to store and procduce line
+    intensities from the precomputed Kauffman 2001 models.
     """
 
     def __init__(self):

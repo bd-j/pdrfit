@@ -1,94 +1,55 @@
 import sys
 import numpy as np
-import pdrfit, pdrplot
+import pdrfit, pdrplot, pdrdata
 
-def fit_pixel(pixel_values, region, mask = [1,0,0], nmod = 5e4,
-              grid = None, pdr = None):
+def fit_pixel(obs, mask=None, nmod=5e4, maxmod=1e4,
+              grid=None, pdr=None, priors=None):
+    """Fit data for a single pixel.
+    """
+    if mask is not None:
+        # Mask lines to ignore in the fits. 1 = fit, 0 = not fit.
+        # Order is CII, OI63, OI145
+        obs['line_mask'] = np.array(mask, dtype=np.bool)
 
-###    Run by typing: python fit_ngc6822.py
-    
-#######
-# Load Observations
-########
-    dat = pixel_values
-    obs = {}
-    obs['region'] = region
-    obs['pixel'] = dat[0:2]
-    obs['line_intensity'] = np.array([dat[5], dat[7], dat[9]]) #W/m^2/sr
-    obs['FIR'] = dat[3]  #W/m^2/sr
-    obs['Gstar'] = dat[2] #Habings
-    obs['line_unc'] = np.sqrt(np.array([dat[6], dat[8], dat[10]])**2 + (np.array([0.1,0.5,0.5]) * obs['line_intensity'])**2)
-    obs['FIR_unc'] = dat[4]
-    obs['Gstar_unc'] = obs['Gstar'] * 0.5
-
-# Mask lines to ignore in the fits.  1 = fit, 0 = not fit.  Order is CII, OI63, OI145
-#    obs['line_mask'] = np.array(mask)
-    obs['line_mask']= dat[ -3 : ]  # LYNN
-    
-#######
-# Build the model grid
-######
+    #---------------
+    # Build the model grid
+    #---------------
     if grid is None:
-        grid = pdrfit.load_kauffman()
+        grid = pdrfit.PDRGrid()
     if pdr is None:
         pdr = pdrfit.PDRModel()
-    
-    priors = {}
-    priors['n'] = {'min': 1, 'max':4.5, 'scale':'log'}
-    priors['Go'] = {'min': 0.5, 'max':4, 'scale':'log'}
-    fill_try = obs['FIR'] / (obs['Gstar'] * pdrfit.GtoI) #first guess at filling factor
-    priors['fill'] = {'min': fill_try/3., 'max': np.min([3.*fill_try, 1.0]), 'scale':'linear'}
-    #priors['fill'] = {'min': fill_try/2., 'max': 1.0, 'scale':'linear'}
-     
-    fill_try = obs['FIR'] / (obs['Gstar'] * pdrfit.GtoI)
-#use random sampling of the parameter space.  Could also set up here to use grids
-    n = np.random.uniform(priors['n']['min'], priors['n']['max'], int(nmod))
-    Go = np.random.uniform(priors['Go']['min'], priors['Go']['max'], int(nmod))
-    fill = np.random.uniform(priors['fill']['min'], priors['fill']['max'], int(nmod))
-    theta = [n, Go, fill]
+    theta, parnames = fitpix.sample_priors(nmod, priors)
 
-#######
-# Calculate the model probabilities (and model predicted intensities)
-######
-
-#lnprob, blob = pdr.lnprob(theta, obs = obs, grid =grid)
-#predicted_lines = blob[0]
-
-    lnprob, predicted_lines = np.zeros(int(nmod)), np.zeros([int(nmod), len(obs['line_intensity'])]) 
-    predicted_fir, predicted_gstar = np.zeros(int(nmod)), np.zeros(int(nmod))
-    maxmod = 1e4
+    #----------------
+    # Calculate the model probabilities (and model predicted intensities)
+    #----------------
+    nm = int(nmod)
+    lnprob = np.zeros(nm),
+#    model_lines = np.zeros([nm, len(obs['line_intensity'])]) 
+#    model_fir, model_gstar = np.zeros(nm), np.zeros(nm)
+    blob = []
     i = 0
-    #split to conserve memory
+    # Split to conserve memory
     while (i*maxmod <= nmod):
         s1, s2 = int((i)*maxmod), int(np.min( [(i+1)*maxmod-1,nmod] ))
-        l, b = pdr.lnprob([theta[0][s1:s2], theta[1][s1:s2], theta[2][s1:s2]], obs = obs, grid =grid)
-        lnprob[s1:s2] = l
-        predicted_lines[s1:s2,:] = b[0]
-        predicted_fir[s1:s2] = b[1]
-        predicted_gstar = b[2]
+        chunk_theta = [theta[0][s1:s2], theta[1][s1:s2], theta[2][s1:s2]]
+        lnp, chblob = pdr.lnprob(chunk_theta, obs=obs, grid=grid)
+        lnprob[s1:s2] = lnp
+        blob.append(chblob)
+#        model_lines[s1:s2,:] = chblob[0]
+#        model_fir[s1:s2] = chblob[1]
+#        model_gstar = chblob[2]
         i += 1
 
-    return theta, lnprob, obs, [predicted_lines, predicted_fir, predicted_gstar], [grid, pdr]
+    return theta, lnprob, blob #, [model_lines, model_fir, model_gstar]
 
-######
-# Plot results
-######
 
 if __name__ == '__main__':
 
-    #    pixel_values = [9, 7, 1372.8338, 4.8852239e-05, 7.32784e-06,
-    #                    1.27997e-07, 4.22917e-10, 7.47584e-08, 5.60757e-10, 7.13582e-09, 2.57272e-10, 1, 1, 1]
-                    #    region = 'Hubble V'
-                    #    theta, lnprob, obs, predictions  = fit_pixel(pixel_values, region, mask = [1,0,0], nmod = 5e4)
-                    #   theta, lnprob, obs, predictions  = fit_pixel(pixel_values, region, nmod = 5e4) # LYNN
-                    #    pdrplot.triangle(theta, lnprob, obs)
-                    #    pdrplot.line_prediction(theta, lnprob, obs, predictions[0])
-    
-                    #    sys.exit()
-    
-    dat = np.loadtxt('/Users/carlson/Desktop/NGC6822/FitsFiles/HubbleX/Ratios/HX_pixelvalues_lown.txt', skiprows = 2)
-    region = 'Hubble X'
-    npix = dat.shape[0]
+    region = 'Hubble X'    
+    filename = '/Users/carlson/Desktop/NGC6822/FitsFiles/HubbleX/Ratios/HX_pixelvalues_lown.txt'
+    allobs = fitpix.load_obs_fromtxt(filename)
+    npix = len(allobs)
     
     outfile = open('HubbleXpoint_estimates_lown_lowfill_ciiweight.dat','w')
     outfile.write('x y chi_best, logn_best logG_best fill_best OI_best ' \
@@ -101,11 +62,21 @@ if __name__ == '__main__':
                   'logn_p84 logG_p84 fill_p84 \n')
 
     grid = pdr = None
+    priors = {}
+    priors['n'] = {'min': 1, 'max':4.5, 'scale':'log'}
+    priors['Go'] = {'min': 0.5, 'max':4, 'scale':'log'}
+
     for ipix in xrange(npix):
         print('pixel #{0} of {1}'.format(ipix, npix))
-        pixel_values = dat[ipix,:].tolist() 
-        #        theta, lnp, obs, pred = fit_pixel(pixel_values, region, mask = [1,1,0], nmod = 5e4)
-        theta, lnp, obs, pred, mod = fit_pixel(pixel_values, region, nmod = 1e5, grid = grid, pdr =pdr) # LYNN
+        obs = allobs[ipix]
+        #Modify the filling factor prior
+        fill_try = obs['FIR'] / (obs['Gstar'] * pdrfit.GtoI) 
+        priors['fill'] = {'min': fill_try/3.,
+                          'max': np.min([3.*fill_try, 1.0]),
+                          'scale':'linear'}
+
+        theta, lnp, blob = fit_pixel(obs, mask=None, nmod=1e5,
+                                     grid=grid, pdr=pdr)
         lnp[lnp == 0.] = lnp.min() #HACK
         grid, pdr = mod[0], mod[1]
         
