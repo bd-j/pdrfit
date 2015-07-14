@@ -81,12 +81,6 @@ if __name__ == '__main__':
         pdrplot.plot_one(theta, lnp, obs, n_per_bin=100, fontsize=18)
         pdrplot.line_prediction(theta, lnp, obs, blob[0])
 
-        #write the pixel number
-        outfile.write('{0:2.0f} {1:2.0f} '.format(obs['pixel'][0],obs['pixel'][1]))
-                      
-        # Get point estimates based on best fitting model
-        bestfit_theta, _, _, best_lines, chi_best, _ = pdrplot.point_estimates(theta, lnp, obs, pred[0], point_type = 'best_fit')
-        outfile.write('{0:6.3f} {2:6.3f} {3:6.3f} {4:6.3f} {1:6.3e} '.format(chi_best, best_lines[1], *bestfit_theta))
         
         # Get point estimates based on the cell in the 3-d (n, Go, fill) histogram of
         #  probability with the maximum probability density.  upper and lower give the

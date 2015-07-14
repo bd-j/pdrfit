@@ -55,3 +55,14 @@ def write_text(outfilename='HubbleXpoint_estimates_lown_lowfill_ciiweight.dat'):
                   'logn_p16 logG_p16 fill_p16 ' \
                   'logn_p84 logG_p84 fill_p84 \n')
     return outfile
+
+def write_line(outfile, theta, lnp, blob, obs):
+    
+    #write the pixel number
+    outfile.write('{0:2.0f} {1:2.0f} '.format(obs['x'],obs['y']))
+                      
+    # Get and write point estimates based on best fitting model
+    best_theta, chi = pdrdata.best_fit(lnprob, theta)
+    best_lines, chi = pdrdata.best_fit(lnprob, blob[0].T)
+    vals = [chi] + best_theta + [best_lines[line_index]]
+    outfile.write('{0:6.3f} {1:6.3f} {2:6.3f} {3:6.3f} {4:6.3e} '.format(*vals))
