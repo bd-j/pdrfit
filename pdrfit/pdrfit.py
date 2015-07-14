@@ -17,8 +17,7 @@ import numpy as np
 GtoI = 1.6e-6/(2*np.pi)
 
 class PDRModel(object):
-    """
-    Class to produce generative models of PDR emission lines and IR
+    """Class to produce generative models of PDR emission lines and IR
     luminosities, and to determine the likelihood of a given set of
     observations.
     """
@@ -26,16 +25,15 @@ class PDRModel(object):
     def __init__(self):
         pass
         
-    def model(self, n, Go, fill, grid=None):
-        """
-        Produce observable quantities given physical parameters for a
-        model.
+    def model(self, logn, logGo, fill, grid=None):
+        """Produce observable quantities given physical parameters for
+        a model.
 
-        :param n:
+        :param logn:
             The log of the gas volume density, in cm^-3.  Scalar or
             ndarray.
             
-        :param Go:
+        :param logGo:
             The log of the interstellar radiation field intensity, in
             Habings.  Scalar or ndarray of same shape as n.
 
@@ -60,20 +58,19 @@ class PDRModel(object):
         
         if grid is None:
             grid = self.grid
-        Gstar = 10**Go * np.sqrt(2)
-        FIR = 10**Go * fill * GtoI
-        lines = grid.lines(n, Go, interpolation = 'dt')
+        Gstar = 10**logGo * np.sqrt(2)
+        FIR = 10**logGo * fill * GtoI
+        lines = grid.lines(logn, logGo, interpolation = 'dt')
         lines *= fill[:,None] / (2 *np.pi) * 1e-3
         return lines, FIR, Gstar
           
     def lnprob(self, theta, obs=None, grid=None):
-        """
-        Compute the likelihood of a model or of a grid of models.
+        """Compute the likelihood of a model or of a grid of models.
 
         :param theta:
             The physical parameters of the models for which you wish
             to obtain likelihoods.  3-element list or tuple, that
-            unpacks to the n, Go, and fill values of the models.
+            unpacks to the logn, logGo, and fill values of the models.
 
         :param obs:
             A dictionary containing the observed values and
@@ -90,9 +87,8 @@ class PDRModel(object):
         :returns blob:
             A list of each of the predicted observables for the models
         """
-        
-        n, Go, fill = theta
-        lines, FIR, Gstar = self.model(n, Go, fill, grid=grid)
+        logn, logGo, fill = theta
+        lines, FIR, Gstar = self.model(logn, logGo, fill, grid=grid)
         lnprob = -0.5 * ((lines - obs['line_intensity'][None,:])**2 /
                          obs['line_unc'][None,:]**2 *
                          obs['line_mask']).sum(axis=-1)
@@ -106,23 +102,38 @@ class PDRGrid(modelgrid.ModelLibrary):
     from the precomputed Kauffman 2001 models.
     """
     
-    pars = 0.
-    intensity = 0.
-    
     def __init__(self):
-        pass
+        self.files = ['data/CPwMeudonHol.txt', 'data/OPwMeudonHol.txt']
+        self.load_kauffman(skiplines=2)
+    
+    def load_kauffman(self, skiplines=2):    
+        """Load the kauffman 2001 PDR models.
+        """
+        self.wavelength = np.array([158.,63.,145.])
+        self.line_names = ['CII158','OI63', 'OI145']
+        n, g, cii = np.loadtxt(self.files[0], usecols=(1,3,4),
+                               skiprows=skiplines, unpack=True)
+        n, g, oi63, oi145 = np.loadtxt(self.files[1], usecols = (1,3,4,5),
+                                       skiprows=skiplines, unpack=True)
         
-    def lines(self, n, Go, interpolation='dt'):
+        dt = np.dtype([('logn','<f8'), ('logGo', '<f8')])
+        self.pars = np.zeros(len(n), dtype=dt)
+        self.pars['logn'] = n
+        self.pars['logGo'] = g
+        # ndarray of shape (len(n), len(names))
+        self.intensity = np.array([cii, oi63, oi145]).T
+        
+    def lines(self, logn, logGo, interpolation='dt'):
         """
         Use the Delauynay triangulation interpolation techniques of
         the ModelLibrary class to obtain FIR line intensities
         interpolated from the Kaufman 01 grids.
 
-        :param n:
+        :param logn:
             The log of the gas volume density, in
             r'$cm^{{-3}}$'. Scalar or array-like.
             
-        :param Go:
+        :param logGo:
             The log of the interstellar radiation field intensity, in
             Habings.  Scalar or array-like with shape matching n
 
@@ -131,8 +142,8 @@ class PDRGrid(modelgrid.ModelLibrary):
             units of ?.  ndarray of shape ?
         """
         
-        parnames = ['n', 'Go']
-        target_points = np.vstack([np.atleast_1d(n),np.atleast_1d(Go)]).T
+        parnames = ['logn', 'logGo']
+        target_points = np.vstack([np.atleast_1d(logn),np.atleast_1d(logGo)]).T
         inds, weights = self.model_weights(target_points, parnames=parnames,
                                            itype=interpolation)
         intensities  = (( weights* (self.intensity[inds].transpose(2,0,1)) ).sum(axis=2)).T
@@ -165,34 +176,3 @@ def load_kauffman():
     grid.intensity[:,2] = oi145
     return grid
     
-def read_kauffman(filename, as_struct=False):
-    """
-    Read the output of the interpolated Kaufman PDR models for the
-    line intensity expected at a given density and G_o.
-
-    :param filename:
-        name of the file containing the model predictions
-    
-    :returns n:
-        density values
-    
-    :returns Go:
-        radiation field values
-    
-    :returns I:
-        line intensity (or FIR luminosity)
-    """
-    
-    tmp = open(filename, 'rb')
-    while len(tmp.readline().split()) < 5:
-        skiprows += 1
-    tmp.close()
-
-    if as_struct:
-        f8 = '<f8'
-        dt = np.dtype([('n',f8), ('Go', f8), ('I', f8)])
-        data = np.loadtxt(filename, usecols = (1,3,4), dtype=dt, skiprows=skiprows)
-        return data
-    else:
-        n, Go, I = np.loadtxt(filename, usecols = (1,3,4), skiprows=skiprows)
-        return n, Go, I
