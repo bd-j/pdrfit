@@ -44,8 +44,14 @@ def fit_pixel(obs, model, priors=None):
     return theta, lnprob
 
 
-def sample_priors(prior_desc):
-    priors=[]
-    for par, prior in prior_desc.iteritems():
-        continue
-    return theta, theta_labels
+def write_text(outfilename='HubbleXpoint_estimates_lown_lowfill_ciiweight.dat'):
+    outfile = open(outfilename,'w')
+    outfile.write('x y chi_best, logn_best logG_best fill_best OI_best ' \
+                  'logn_av logG_av fill_av ' \
+                  'logn_lo logG_lo fill_lo ' \
+                  'logn_hi logG_hi fill_hi ' \
+                  'chibest_cell Pcell OI_cell CII_cell ' \
+                  'logn_p50 logG_p50 fill_p50 ' \
+                  'logn_p16 logG_p16 fill_p16 ' \
+                  'logn_p84 logG_p84 fill_p84 \n')
+    return outfile

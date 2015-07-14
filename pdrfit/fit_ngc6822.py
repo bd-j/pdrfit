@@ -18,7 +18,7 @@ def fit_pixel(obs, mask=None, nmod=5e4, maxmod=1e4,
         grid = pdrfit.PDRGrid()
     if pdr is None:
         pdr = pdrfit.PDRModel()
-    theta, parnames = fitpix.sample_priors(nmod, priors)
+    theta, parnames = pdrfit.sample_priors(nmod, priors)
 
     #----------------
     # Calculate the model probabilities (and model predicted intensities)
@@ -46,43 +46,40 @@ def fit_pixel(obs, mask=None, nmod=5e4, maxmod=1e4,
 
 if __name__ == '__main__':
 
+    # Data
     region = 'Hubble X'    
-    filename = '/Users/carlson/Desktop/NGC6822/FitsFiles/HubbleX/Ratios/HX_pixelvalues_lown.txt'
-    allobs = fitpix.load_obs_fromtxt(filename)
+    filename = ("/Users/carlson/Desktop/NGC6822/FitsFiles/HubbleX/Ratios/"
+                "HX_pixelvalues_lown.txt")
+    allobs = pdrdata.load_obs_fromtxt(filename)
     npix = len(allobs)
-    
-    outfile = open('HubbleXpoint_estimates_lown_lowfill_ciiweight.dat','w')
-    outfile.write('x y chi_best, logn_best logG_best fill_best OI_best ' \
-                  'logn_av logG_av fill_av ' \
-                  'logn_lo logG_lo fill_lo ' \
-                  'logn_hi logG_hi fill_hi ' \
-                  'chibest_cell Pcell OI_cell CII_cell ' \
-                  'logn_p50 logG_p50 fill_p50 ' \
-                  'logn_p16 logG_p16 fill_p16 ' \
-                  'logn_p84 logG_p84 fill_p84 \n')
 
-    grid = pdr = None
-    priors = {}
-    priors['n'] = {'min': 1, 'max':4.5, 'scale':'log'}
-    priors['Go'] = {'min': 0.5, 'max':4, 'scale':'log'}
+    # Model
+    grid =  pdrfit.PDRGrid()
+    pdr = pdrfit.PDRModel()
+    priors = {'parnames':['logn', 'logGo', 'fill']}
+    priors['logn'] = {'min': 1, 'max':4.5, 'transform':None}
+    priors['logGo'] = {'min': 0.5, 'max':4, 'transform':None}
+    priors['fill'] = {'min':0.0, 'max':1.0, 'transform':None}
 
+    # Loop over pixels
     for ipix in xrange(npix):
+        
         print('pixel #{0} of {1}'.format(ipix, npix))
         obs = allobs[ipix]
+        
         #Modify the filling factor prior
         fill_try = obs['FIR'] / (obs['Gstar'] * pdrfit.GtoI) 
         priors['fill'] = {'min': fill_try/3.,
                           'max': np.min([3.*fill_try, 1.0]),
-                          'scale':'linear'}
+                          'transform':None}
 
         theta, lnp, blob = fit_pixel(obs, mask=None, nmod=1e5,
-                                     grid=grid, pdr=pdr)
+                                     grid=grid, pdr=pdr, priors=priors)
         lnp[lnp == 0.] = lnp.min() #HACK
-        grid, pdr = mod[0], mod[1]
         
-        pdrplot.triangle(theta, lnp, obs, n_per_bin = 100.)
-        pdrplot.plot_one(theta, lnp, obs, n_per_bin = 100., fontsize=18)
-        pdrplot.line_prediction(theta, lnp, obs, pred[0])
+        pdrplot.triangle(theta, lnp, obs, n_per_bin=100)
+        pdrplot.plot_one(theta, lnp, obs, n_per_bin=100, fontsize=18)
+        pdrplot.line_prediction(theta, lnp, obs, blob[0])
 
         #write the pixel number
         outfile.write('{0:2.0f} {1:2.0f} '.format(obs['pixel'][0],obs['pixel'][1]))

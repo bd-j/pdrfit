@@ -10,7 +10,6 @@
 # index(n value), log(n), index(g value), log(Go), [CII]158um
 # The [OI]63um, [OI]145um, and [CII] are in erg s-1 cm-2  and should be divided by 2pi to get sr-1
 
-
 import modelgrid
 import numpy as np
 
@@ -97,8 +96,8 @@ class PDRModel(object):
         lnprob += -0.5 * ((Gstar - obs['Gstar'])**2 / obs['Gstar_unc']**2)
         return lnprob, [lines, FIR, Gstar]
 
-    def blob_params_names(self):
-        return [['[CII]','[OI]63um', '[OI]145um'], 'FIR', 'Gstar'] 
+    def blob_description(self, grid=None):
+        return [grid.line_names, 'FIR', 'Gstar'] 
 
 class PDRGrid(modelgrid.ModelLibrary):
     """Subclass the ModelLibrary to store and procduce line
@@ -143,10 +142,17 @@ class PDRGrid(modelgrid.ModelLibrary):
             The line intensities for the given model parameters, in
             units of ?.  ndarray of shape ?
         """
-
         parnames = ['logn', 'logGo']
         target_points = np.vstack([np.atleast_1d(logn), np.atleast_1d(logGo)]).T
         inds, weights = self.model_weights(target_points, parnames=parnames,
                                            itype=interpolation)
         intensities = ((weights * (self.intensity[inds].transpose(2,0,1))).sum(axis=2)).T
         return intensities
+
+def sample_priors(nmod, prior_desc):
+    pnames = prior_desc['parnames']
+    theta = len(parnames) * [[]]
+    for i, par in enumerate(pnames):
+        mini, maxi = prior_desc[par]['min'], prior_desc[par]['max']
+        theta[i] = np.random.uniform(mini, maxi, int(nmod))
+    return theta, pnames
