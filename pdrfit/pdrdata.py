@@ -6,8 +6,8 @@ filename = '../observations/HX_pixelvalues.txt'
 def load_obs_fromtxt(filename, gstar_jitter=0.5, region='',
                      line_jitter=[0.1, 0.5, 0.5], line_mask=None):
 
-    cols = [('x',np.int), ('y',np.int), ('region', 'S50'),
-            ('line_intensity',np.float, 3), ('line_unc',np.float, 3),
+    cols = [('x', np.int), ('y', np.int), ('region', 'S50'),
+            ('line_intensity', np.float, 3), ('line_unc', np.float, 3),
             ('line_mask', np.bool, 3),
             ('FIR', np.float), ('FIR_unc', np.float),
             ('Gstar', np.float), ('Gstar_unc', np.float)]
@@ -72,5 +72,21 @@ def write_line(outfile, theta, lnp, blob, obs):
     outfile.write('{0:6.3f} {1:6.3f} {2:6.3f} {3:6.3f} {4:6.3e} '.format(*vals))
 
 
-def write_fits(outfilename):
-    pass
+
+    
+def pixel_results(theta, lnp, obs,
+                  blob=None, blob_desc=None,
+                  theta_names=None):
+
+    cols = [('x', np.int), ('y', np.int), ('region', 'S50'),
+            ('chi_bestcell', np.float), ('chi_best', np.float)]
+    
+    lines, line_names = blob[0], blob_desc[0]
+    qnames = theta_names + line_names
+    q = theta + lines
+
+    
+    #for ptype in ['bestcell', 'p16', 'median', 'p84', 'bestfit'
+    #cols = cols + zip
+
+    #q_cell, q_low, q_high, 

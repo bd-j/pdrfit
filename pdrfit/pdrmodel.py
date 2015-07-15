@@ -97,6 +97,9 @@ class PDRModel(object):
         return lnprob, [lines, FIR, Gstar]
 
     def blob_description(self, grid=None):
+        """A description of the objects passed out of the lnprob
+        method.
+        """
         return [grid.line_names, 'FIR', 'Gstar'] 
 
 class PDRGrid(modelgrid.ModelLibrary):
