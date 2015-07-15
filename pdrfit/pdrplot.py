@@ -44,9 +44,9 @@ def triangle(theta, lnprob, obs, n_per_bin=100.):
             else:
                 ax.set_xticklabels([])
         vals = [obs['region'], obs['x'], obs['y'], obs['line_mask']]
-        pl.suptitle('{0}, pixel ({1},{2}), mask = {3}'.format(**vals))
-        vals = [''.join(obs['region'].split()), obs['pixel'][0],obs['pixel'][1]]
-        fig.savefig('results/triangle_{0}_x{1:02.0f}_y{2:02.0f}.pdf'.format(**vals))
+        pl.suptitle('{0}, pixel ({1},{2}), mask = {3}'.format(*vals))
+        vals = [''.join(obs['region'].split()), obs['x'], obs['y']]
+        fig.savefig('results/triangle_{0}_x{1:02.0f}_y{2:02.0f}.pdf'.format(*vals))
         pl.close(fig)
 
 def plot_one(theta, lnprob, obs, n_per_bin=100., fontsize=18, axwidth=2):
@@ -69,7 +69,7 @@ def plot_one(theta, lnprob, obs, n_per_bin=100., fontsize=18, axwidth=2):
                 pl.xlabel(labels[i], fontsize=fontsize)
                 vals = [sl[i], ''.join(obs['region'].split()), obs['x'],obs['y']]
                 fnstring = 'results/lnphist_{0}_{1}_x{2:02.0f}_y{3:02.0f}.pdf'
-                pl.savefig(fnstring.format(**vals))
+                pl.savefig(fnstring.format(*vals))
                 pl.close()
             else:
                 pl.figure()
@@ -87,7 +87,7 @@ def plot_one(theta, lnprob, obs, n_per_bin=100., fontsize=18, axwidth=2):
                 
                 vals = [sl[i], sl[j], obs['x'], obs['y'], ''.join(obs['region'].split())]
                 fnstring = 'results/lnp2d_{0}_vs_{1}_{4}_x{2:02.0f}_y{3:02.0f}.pdf'
-                pl.savefig(fnstring.format(**vals))
+                pl.savefig(fnstring.format(*vals))
                 pl.close()
                 
 def line_prediction(theta, lnprob, obs, predicted_lines,
@@ -109,10 +109,10 @@ def line_prediction(theta, lnprob, obs, predicted_lines,
     pl.ylim(0.5,100)
     
     vals = [obs['region'], obs['x'], obs['y'], obs['line_mask']]
-    pl.title('{0}, pixel ({1},{2}), mask={3}'.format(**vals))
+    pl.title('{0}, pixel ({1},{2}), mask={3}'.format(*vals))
     vals = [''.join(obs['region'].split()), obs['x'], obs['y'], line_name[line_index]]
     fnstring = 'results/linepred{3}_{0}_x{1:02.0f}_y{2:02.0f}.pdf'
-    pl.savefig(fnstring.format(**vals))
+    pl.savefig(fnstring.format(*vals))
     pl.close()
 
 def point_estimates(theta, lnprob, quantities=None,
@@ -223,7 +223,7 @@ def best_cell(lnprob, theta_in, nmod_per_bin=20.,
     ind_best = np.unravel_index(np.argmax(H), H.shape)
     lower = [e[ind_best[i]] for i,e in enumerate(edges)]
     upper = [e[ind_best[i] + 1] for i,e in enumerate(edges)]
-    point = ((np.array(lower) + np.array(upper))/2.).tolist()
+    #point = ((np.array(lower) + np.array(upper))/2.).tolist()
 
     # Total normalized probability within the cell
     pcell = np.exp(H[ind_best]) / (np.exp(H)).sum()
@@ -236,8 +236,9 @@ def best_cell(lnprob, theta_in, nmod_per_bin=20.,
     
     # Weighted average within the cell
     if quantities is not None:
-        nquantites = len(quantities)
-        cell_average_q = [np.sum(np.exp(lnprob[inds]) * quantities[i, inds]) /
-                          np.exp(lnprob[inds]).sum() for i in range(nquantities)]
-
+        allq = theta + quantities
+    nquantites = len(allq)
+    cell_average_q = [np.sum(np.exp(lnprob[inds]) * quantities[i, inds]) /
+                      np.exp(lnprob[inds]).sum() for i in range(nquantities)]
+    point = cell_average_q
     return point, upper, lower, chi_best, pcell    

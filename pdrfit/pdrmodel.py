@@ -151,7 +151,7 @@ class PDRGrid(modelgrid.ModelLibrary):
 
 def sample_priors(nmod, prior_desc):
     pnames = prior_desc['parnames']
-    theta = len(parnames) * [[]]
+    theta = len(pnames) * [[]]
     for i, par in enumerate(pnames):
         mini, maxi = prior_desc[par]['min'], prior_desc[par]['max']
         theta[i] = np.random.uniform(mini, maxi, int(nmod))
