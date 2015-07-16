@@ -3,6 +3,11 @@ import numpy as np
 import pdrmodel, pdrplot, pdrdata
 from pdrfit import fit_pixel
 
+try:
+    import astropy.io.fits as pyfits
+except ImportError:
+    import pyfits 
+
 def fit_region(datafile, region='', nmod=1e3,
                npb=100, plotdir='./results/'):
     
@@ -103,4 +108,5 @@ if __name__ == '__main__':
     dat = fit_region(filename, region=region, nmod=5e4,
                      npb=50, plotdir='./results/')
 
-    
+    bintab = pyfits.TableHDU(data=dat)
+    bintab.writeto(''.join(region.split())+'.pdrfit.fits', clobber=True)
