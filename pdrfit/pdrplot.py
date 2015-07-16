@@ -127,11 +127,11 @@ def line_prediction(theta, lnprob, obs, predicted_lines,
     ax.set_ylim(0.5,100)
     
     vals = [obs['region'], obs['x'], obs['y'], obs['line_mask']]
-    ax.title('{0}, pixel ({1},{2}), mask={3}'.format(*vals))
+    ax.set_title('{0}, pixel ({1},{2}), mask={3}'.format(*vals))
     vals = [''.join(obs['region'].split()), obs['x'], obs['y'], line_name[line_index]]
     fnstring = 'results/linepred{3}_{0}_x{1:02.0f}_y{2:02.0f}.pdf'
     fig.savefig(fnstring.format(*vals))
-    fig.close()
+    pl.close(fig)
 
 def point_estimates(theta, lnprob, quantities=None,
                     point_type='best_fit', **kwargs):
@@ -198,14 +198,14 @@ def marginalized_percentiles(lnprob, quantities,
         Array like, of shape (nquantities, nmod)
     """
     point, upper, lower = [],[],[]
-    for q in qunatities:
-        ptiles = cdf_moment(q, lnprob, percentiles)
-        lower += pctles[0]
-        upper += pctles[2]
-        point += pctles[1]
+    for q in quantities:
+        pctiles, pmax = cdf_moment(q, lnprob, percentiles)
+        lower.append(pctiles[0])
+        upper.append(pctiles[2])
+        point.append(pctiles[1])
     return point, upper, lower
 
-def cdf_moment(inpar, inlnprob, percentiles):
+def cdf_moment(inpar, inlnprob, percentiles=[0.16, 0.5, 0.84]):
     """Obtain specified percentiles of the CDF.
     """
     good = np.isfinite(inpar) & np.isfinite(inlnprob)
@@ -213,9 +213,9 @@ def cdf_moment(inpar, inlnprob, percentiles):
     order = np.argsort(par)
     cdf = np.cumsum(np.exp(lnprob[order])) / np.sum(np.exp(lnprob))
     ind_ptiles= np.searchsorted(cdf, percentiles)
-    ind_max=np.argmax(lnprob_isnum)
+    ind_max=np.argmax(lnprob)
 
-    return np.concatenate(par[order[ind_ptiles]],par[ind_max])
+    return par[order[ind_ptiles]], par[ind_max]
 
 def best_cell(lnprob, theta_in, nmod_per_bin=20.,
               quantities=None, **extras):
@@ -254,14 +254,11 @@ def best_cell(lnprob, theta_in, nmod_per_bin=20.,
     # Find the models within the cell
     inds = np.ones(nmod, dtype = bool)
     for i in range(ntheta):
-        inds = inds & ((theta[i] < upper[i]) & (theta[i] >= lower[i]))
+        inds = inds & ((theta[:,i] < upper[i]) & (theta[:,i] >= lower[i]))
     chi_best = -2.0 * lnprob[inds].max()
     
     # Weighted average within the cell
-    if quantities is not None:
-        allq = theta + quantities
-    nquantites = len(allq)
-    cell_average_q = [np.sum(np.exp(lnprob[inds]) * quantities[i, inds]) /
-                      np.exp(lnprob[inds]).sum() for i in range(nquantities)]
-    point = cell_average_q
+    nquantities = len(quantities)
+    point = [np.sum(np.exp(lnprob[inds]) * quantities[i][inds]) /
+             np.exp(lnprob[inds]).sum() for i in range(nquantities)]
     return point, upper, lower, chi_best, pcell    
