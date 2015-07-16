@@ -1,7 +1,8 @@
 import sys
 import numpy as np
-import pdrmodel, pdrplot, pdrdata
-from pdrfit import fit_pixel
+from pdrfit import io as pdrdata
+from pdrfit import pdrplot
+from pdrfit import fit_pixel, PDRGrid, PDRModel
 
 try:
     import astropy.io.fits as pyfits
@@ -18,8 +19,8 @@ def fit_region(datafile, region='', nmod=1e3,
     npix = len(allobs)
     
     # Set up Model
-    grid = pdrmodel.PDRGrid()
-    pdr = pdrmodel.PDRModel()
+    grid = PDRGrid()
+    pdr = PDRModel()
     priors = {'parnames':['logn', 'logGo', 'fill']}
     priors['logn'] = {'min': 1, 'max':4.5, 'transform':None}
     priors['logGo'] = {'min': 0.5, 'max':4, 'transform':None}
@@ -103,10 +104,10 @@ if __name__ == '__main__':
 
     region = 'Hubble X'    
     filename = (#"/Users/carlson/Desktop/NGC6822/FitsFiles/HubbleX/Ratios/"
-                "../observations/HX_pixelvalues.txt")
+                "observations/HX_pixelvalues.txt")
                 #"HX_pixelvalues_lown.txt")
     dat = fit_region(filename, region=region, nmod=5e4,
-                     npb=50, plotdir='./results/')
+                     npb=50, plotdir='./plots/')
 
     bintab = pyfits.TableHDU(data=dat)
     bintab.writeto(''.join(region.split())+'.pdrfit.fits', clobber=True)

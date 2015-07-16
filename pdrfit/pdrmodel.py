@@ -12,6 +12,7 @@
 
 import modelgrid
 import numpy as np
+from pkg_resources import resource_filename
 
 GtoI = 1.6e-6/(2*np.pi)
 
@@ -109,6 +110,11 @@ class PDRGrid(modelgrid.ModelLibrary):
 
     def __init__(self):
         self.files = ['data/CPwMeudonHol.txt', 'data/OPwMeudonHol.txt']
+        try:
+            self.files = [resource_filename('pdrfit', f) for f in self.files]
+        except:
+            pass
+        
         self.load_kauffman(skiplines=2)
 
     def load_kauffman(self, skiplines=2):
