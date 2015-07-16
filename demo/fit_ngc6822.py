@@ -34,7 +34,7 @@ def fit_region(datafile, region='', nmod=1e3,
         obs = allobs[ipix]
 
         # Modify the filling factor prior
-        fill_try = obs['FIR'] / (obs['Gstar'] * pdrmodel.GtoI) 
+        fill_try = obs['FIR'] / (obs['Gstar'] * pdr.GtoI) 
         priors['fill'] = {'min': fill_try/3.,
                           'max': np.min([3.*fill_try, 1.0]),
                           'transform':None}
@@ -103,9 +103,7 @@ def pixel_values(theta, lnp, obs, blob=None, npb=100,
 if __name__ == '__main__':
 
     region = 'Hubble X'    
-    filename = (#"/Users/carlson/Desktop/NGC6822/FitsFiles/HubbleX/Ratios/"
-                "observations/HX_pixelvalues.txt")
-                #"HX_pixelvalues_lown.txt")
+    filename = ("observations/HX_pixelvalues.txt")
     dat = fit_region(filename, region=region, nmod=5e4,
                      npb=50, plotdir='./plots/')
 

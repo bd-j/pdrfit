@@ -23,6 +23,8 @@ class PDRModel(object):
     observations.
     """
 
+    GtoI = GtoI
+    
     def __init__(self):
         pass
 
