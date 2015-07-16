@@ -1,9 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as pl
 
-def triangle(theta, lnprob, obs, n_per_bin=100.):
+def triangle(theta, lnprob, obs, n_per_bin=100.,
+             plotdir='./' ):
     """Make a corner plot of the binned n-dimensional posteriror
-    probability space
+    probability space.
     """
     labels = ['log n', 'log Go', 'fill fraction']
     nmod = len(lnprob)
@@ -50,10 +51,11 @@ def triangle(theta, lnprob, obs, n_per_bin=100.):
         vals = [obs['region'], obs['x'], obs['y'], obs['line_mask']]
         pl.suptitle('{0}, pixel ({1},{2}), mask = {3}'.format(*vals))
         vals = [''.join(obs['region'].split()), obs['x'], obs['y']]
-        fig.savefig('results/triangle_{0}_x{1:02.0f}_y{2:02.0f}.pdf'.format(*vals))
+        fig.savefig(plotdir+'triangle_{0}_x{1:02.0f}_y{2:02.0f}.pdf'.format(*vals))
         pl.close(fig)
 
-def plot_one(theta, lnprob, obs, n_per_bin=100., fontsize=18, axwidth=2):
+def plot_one(theta, lnprob, obs, n_per_bin=100., fontsize=18,
+             axwidth=2, plotdir='./'):
     """Separately plot each panel of the corner plot.
     """
     pl.rc('axes', linewidth=axwidth)
@@ -74,7 +76,7 @@ def plot_one(theta, lnprob, obs, n_per_bin=100., fontsize=18, axwidth=2):
                 pl.step(x[:-1], hist, where='post', color='k', linewidth=axwidth)
                 pl.xlabel(labels[i], fontsize=fontsize)
                 vals = [sl[i], ''.join(obs['region'].split()), obs['x'],obs['y']]
-                fnstring = 'results/lnphist_{0}_{1}_x{2:02.0f}_y{3:02.0f}.pdf'
+                fnstring = plotdir+'lnphist_{0}_{1}_x{2:02.0f}_y{3:02.0f}.pdf'
                 pl.savefig(fnstring.format(*vals))
                 pl.close()
             else:
@@ -92,12 +94,12 @@ def plot_one(theta, lnprob, obs, n_per_bin=100., fontsize=18, axwidth=2):
                 pl.tick_params(axis='both', width=axwidth * 1.5, length=5)
                 
                 vals = [sl[i], sl[j], obs['x'], obs['y'], ''.join(obs['region'].split())]
-                fnstring = 'results/lnp2d_{0}_vs_{1}_{4}_x{2:02.0f}_y{3:02.0f}.pdf'
+                fnstring = plotdir+'lnp2d_{0}_vs_{1}_{4}_x{2:02.0f}_y{3:02.0f}.pdf'
                 pl.savefig(fnstring.format(*vals))
                 pl.close()
                 
 def line_prediction(theta, lnprob, obs, predicted_lines,
-                    line_index=1):
+                    line_index=1, plotdir='./'):
     """Plot the ratio of the predicted line intensity to the observed
     line intensity as a function of theta, color coded by
     ln(probability).
@@ -129,7 +131,7 @@ def line_prediction(theta, lnprob, obs, predicted_lines,
     vals = [obs['region'], obs['x'], obs['y'], obs['line_mask']]
     ax.set_title('{0}, pixel ({1},{2}), mask={3}'.format(*vals))
     vals = [''.join(obs['region'].split()), obs['x'], obs['y'], line_name[line_index]]
-    fnstring = 'results/linepred{3}_{0}_x{1:02.0f}_y{2:02.0f}.pdf'
+    fnstring = plotdir+'linepred{3}_{0}_x{1:02.0f}_y{2:02.0f}.pdf'
     fig.savefig(fnstring.format(*vals))
     pl.close(fig)
 
