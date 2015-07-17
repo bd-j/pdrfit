@@ -44,26 +44,43 @@ def load_observations_fromfits(files, fields):
 
 
 def write_dict(incat, outname='out.dat', csv=False):
+    """Write a dictionary or Numpy structured array to an ascii file,
+    either space delimited or CSV.
+    
+    :param incat:
+       The catalog to write out, either a dictionary or a numpy
+       structured array.  If a dictionary, it is assumed that the
+       length of the value in each key:value pair is the same.
+
+    :param outname:
+       String giving the name of of the to which the output will be
+       written.
+
+    :param csv: If ``True`` the output file is CSV.  If ``False`` the
+       output file is space delimited.       
+    """
     try:
+        # input is a dictionary
         colnames = incat.keys()
     except AttributeError:
+        # input is a numpy structured array
         colnames = incat.dtype.names
+
+    ncol = len(colnames)
+    nrow = len(incat[colnames[0]]) #assume each column has the same number of rows
 
     #open file and write header
     out = open(outname, 'w')
-    out.write('#')
-    [out.write('{} '.format(col)) for col in colnames]
-    out.write('\n')
-    
-    ncol = len(colnames)
-    nrow = len(incat[colnames[0]])
+    out.write('# ')
     if csv:
-        fstring = ncol * '{},' +'\n'
+        [out.write('{},'.format(col)) for col in colnames]
+        formatstring = (ncol-1) * '{},' +'{}\n'
     else:
-        fstring = ncol * '{} ' +'\n'
+        [out.write('{} '.format(col)) for col in colnames]
+        formatstring = ncol * '{} ' +'\n'
+    out.write('\n')
     
     for irow in range(nrow):
         vals = [incat[col][irow] for col in colnames]
-        out.write(fstring.format(*vals))
+        out.write(formatstring.format(*vals))
     out.close()
-    
