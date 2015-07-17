@@ -41,3 +41,29 @@ def load_obs_fromtxt(filename, gstar_jitter=0.5, region='',
 
 def load_observations_fromfits(files, fields):
     return obs_structured_array
+
+
+def write_dict(incat, outname='out.dat', csv=False):
+    try:
+        colnames = incat.keys()
+    except AttributeError:
+        colnames = incat.dtype.names
+
+    #open file and write header
+    out = open(outname, 'w')
+    out.write('#')
+    [out.write('{} '.format(col)) for col in colnames]
+    out.write('\n')
+    
+    ncol = len(colnames)
+    nrow = len(incat[colnames[0]])
+    if csv:
+        fstring = ncol * '{},' +'\n'
+    else:
+        fstring = ncol * '{} ' +'\n'
+    
+    for irow in range(nrow):
+        vals = [incat[col][irow] for col in colnames]
+        out.write(fstring.format(*vals))
+    out.close()
+    

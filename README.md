@@ -27,7 +27,7 @@ Description:
 - `pdrfit/pdrfit.py` Has a method to fit data for a single pixel
 
 - `pdrfit/pdrmodel.py` has classes for reading and storing holding
-kaufmann model grids and for generating model predictions of
+Kaufmann model grids and for generating model predictions of
 observables given physical conditions. 
 
 - `pdrfit/io.fits` Methods for reading observational data into numpy

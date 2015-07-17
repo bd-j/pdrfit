@@ -107,5 +107,9 @@ if __name__ == '__main__':
     dat = fit_region(filename, region=region, nmod=5e4,
                      npb=50, plotdir='./plots/')
 
+    outroot = ''.join(region.split())+'.pdrfit'
+    # Write a fits ascii table
     bintab = pyfits.TableHDU(data=dat)
-    bintab.writeto(''.join(region.split())+'.pdrfit.fits', clobber=True)
+    bintab.writeto(outroot + '.fits', clobber=True)
+    # Wite a csv file
+    pdrdata.write_dict(dat, outname=outroot+'.csv', csv=True)
