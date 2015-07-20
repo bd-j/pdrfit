@@ -16,16 +16,17 @@ def load_obs_fromtxt(filename, gstar_jitter=0.5, region='',
     npix = dat.shape[0]
     obs = np.zeros(npix, dtype=np.dtype(cols))
 
-    obs['x'] = dat[:,0]
-    obs['y'] = dat[:,1]
+    obs['x'] = dat[:, 0]
+    obs['y'] = dat[:, 1]
     obs['region'] = region
-    obs['line_intensity'] = np.array([dat[:,5], dat[:,7], dat[:,9]]).T  # W/m^2/sr
-    obs['FIR'][:] = dat[:,3]   # W/m^2/sr
-    obs['FIR_unc'] = dat[:,4]
-    obs['Gstar'] = dat[:,2]  # Habings
+    lines = np.array([dat[:, 5], dat[:, 7], dat[:, 9]]).T  # W/m^2/sr
+    obs['line_intensity'] = lines
+    obs['FIR'][:] = dat[:, 3]   # W/m^2/sr
+    obs['FIR_unc'] = dat[:, 4]
+    obs['Gstar'] = dat[:, 2]  # Habings
     obs['Gstar_unc'] = obs['Gstar'] * gstar_jitter
-    
-    obs['line_unc'] = np.array([dat[:,6], dat[:,8], dat[:,10]]).T
+
+    obs['line_unc'] = np.array([dat[:, 6], dat[:, 8], dat[:, 10]]).T
     extra_variance = (np.array(line_jitter) * obs['line_intensity'])**2
     obs['line_unc'] = np.sqrt(obs['line_unc']**2 + extra_variance)
 
@@ -46,7 +47,7 @@ def load_observations_fromfits(files, fields):
 def write_dict(incat, outname='out.dat', csv=False):
     """Write a dictionary or Numpy structured array to an ascii file,
     either space delimited or CSV.
-    
+
     :param incat:
        The catalog to write out, either a dictionary or a numpy
        structured array.  If a dictionary, it is assumed that the
@@ -57,7 +58,7 @@ def write_dict(incat, outname='out.dat', csv=False):
        written.
 
     :param csv: If ``True`` the output file is CSV.  If ``False`` the
-       output file is space delimited.       
+       output file is space delimited.
     """
     try:
         # input is a dictionary
@@ -67,19 +68,22 @@ def write_dict(incat, outname='out.dat', csv=False):
         colnames = incat.dtype.names
 
     ncol = len(colnames)
-    nrow = len(incat[colnames[0]]) #assume each column has the same number of rows
+    # Assert each column has the same number of rows
+    nrow = len(incat[colnames[0]])
+    for c in colnames:
+        assert len(incat[c]) == nrow
 
-    #open file and write header
+    # Open file and write header
     out = open(outname, 'w')
     out.write('# ')
     if csv:
         [out.write('{},'.format(col)) for col in colnames]
-        formatstring = (ncol-1) * '{},' +'{}\n'
+        formatstring = (ncol-1) * '{},' + '{}\n'
     else:
         [out.write('{} '.format(col)) for col in colnames]
-        formatstring = ncol * '{} ' +'\n'
+        formatstring = ncol * '{} ' + '\n'
     out.write('\n')
-    
+
     for irow in range(nrow):
         vals = [incat[col][irow] for col in colnames]
         out.write(formatstring.format(*vals))

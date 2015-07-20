@@ -24,7 +24,7 @@ class PDRModel(object):
     """
 
     GtoI = GtoI
-    
+
     def __init__(self):
         pass
 
@@ -103,7 +103,8 @@ class PDRModel(object):
         """A description of the objects passed out of the lnprob
         method.
         """
-        return [grid.line_names, 'FIR', 'Gstar'] 
+        return [grid.line_names, 'FIR', 'Gstar']
+
 
 class PDRGrid(modelgrid.ModelLibrary):
     """Subclass the ModelLibrary to store and procduce line
@@ -116,7 +117,7 @@ class PDRGrid(modelgrid.ModelLibrary):
             self.files = [resource_filename('pdrfit', f) for f in self.files]
         except:
             pass
-        
+
         self.load_kauffman(skiplines=2)
 
     def load_kauffman(self, skiplines=2):
@@ -159,6 +160,7 @@ class PDRGrid(modelgrid.ModelLibrary):
                                            itype=interpolation)
         intensities = ((weights * (self.intensity[inds].transpose(2,0,1))).sum(axis=2)).T
         return intensities
+
 
 def sample_priors(nmod, prior_desc):
     pnames = prior_desc['parnames']
