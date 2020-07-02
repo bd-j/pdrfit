@@ -44,7 +44,7 @@ def load_observations_fromfits(files, fields):
     return obs_structured_array
 
 
-def write_dict(incat, outname='out.dat', csv=False):
+def write_dict(incat, outname='out.dat', csv=False, transpose=False):
     """Write a dictionary or Numpy structured array to an ascii file,
     either space delimited or CSV.
 
@@ -67,24 +67,35 @@ def write_dict(incat, outname='out.dat', csv=False):
         # input is a numpy structured array
         colnames = incat.dtype.names
 
+    # Transpose arrays
+    if transpose:
+        for col in colnames:
+            incat[col] = list(np.array(incat[col]).T)
+
     ncol = len(colnames)
-    # Assert each column has the same number of rows
     nrow = len(incat[colnames[0]])
+    # Assert each column has the same number of rows and build the
+    # header
+    hdr = []
     for c in colnames:
         assert len(incat[c]) == nrow
+        hdr += np.size(incat[c][0]) * ['{}'.format(c)]
 
     # Open file and write header
     out = open(outname, 'w')
     out.write('# ')
     if csv:
-        [out.write('{},'.format(col)) for col in colnames]
-        formatstring = (ncol-1) * '{},' + '{}\n'
+        out.write(','.join(hdr))
+        formatstring = (len(hdr)-1) * '{},' + '{}\n'
     else:
-        [out.write('{} '.format(col)) for col in colnames]
-        formatstring = ncol * '{} ' + '\n'
+        out.write(' '.join(hdr))
+        formatstring = len(hdr) * '{} ' + '\n'
     out.write('\n')
 
     for irow in range(nrow):
-        vals = [incat[col][irow] for col in colnames]
+        vals = []
+        for col in colnames:
+            print(col, incat[col][irow])
+            vals += list(np.atleast_1d(incat[col][irow]))
         out.write(formatstring.format(*vals))
     out.close()
